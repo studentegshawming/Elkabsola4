@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الطلاب المتكامل</title>
+
+<style>
+* { box-sizing: border-box; }
+body { 
+  font-family: 'Tahoma', Arial; 
+  direction: rtl; 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+h2, h3 {
+  text-align: center;
+  color: #333;
+  margin-top: 0;
+}
+
+h2 { 
+  color: #667eea;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 15px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px 15px;
+  margin: 8px 0;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+input:focus, select:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+button {
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+  font-size: 16px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.green { 
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+.red { 
+  background: linear-gradient(135deg, #cb2d3e, #ef473a);
+}
+.blue { 
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+.orange {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+.gray {
+  background: linear-gradient(135deg, #757F9A, #D7DDE8);
+  color: #333;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.btn-group button {
+  flex: 1;
+}
+
+.card {
+  background: #f8f9fa;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border-right: 4px solid #667eea;
+  transition: all 0.3s;
+  animation: slideIn 0.5s;
+}
+
+.card:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.card .price {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.card .status-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.status-pending { background: #ffc107; color: #333; }
+.status-accepted { background: #28a745; color: white; }
+.status-rejected { background: #dc3545; color: white; }
+
+.page { display: none; }
+.show { display: block; }
+
+#subjectsList, #requestsList {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  background: #f0f0f0;
+  padding: 15px;
+  border-radius: 12px;
+  margin: 15px 0;
+}
+
+.stats div {
+  text-align: center;
+}
+
+.stats .number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stats .label {
+  font-size: 12px;
+  color: #666;
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 10px;
+  z-index: 1000;
+  animation: slideDown 0.5s;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 15px; }
+  .btn-group { flex-direction: column; }
+  .stats { flex-direction: column; gap: 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🎓 نظام الطلاب المتكامل</h2>
+
+<!-- الأزرار الرئيسية -->
+<div class="btn-group">
+  <button class="blue" onclick="go('registerPage')">📝 تسجيل طالب</button>
+  <button class="orange" onclick="openAdminLogin()">🔐 لوحة الأدمن</button>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div id="quickStats" class="stats">
+  <div>
+    <div class="number" id="totalStudents">0</div>
+    <div class="label">إجمالي الطلاب</div>
+  </div>
+  <div>
+    <div class="number" id="pendingRequests">0</div>
+    <div class="label">طلبات معلقة</div>
+  </div>
+</div>
+
+<!-- ====== صفحة التسجيل ====== -->
+<div id="registerPage" class="page show">
+  <h3>📋 تسجيل طالب جديد</h3>
+  
+  <input id="name" placeholder="👤 الاسم الكامل">
+  <input id="phone" placeholder="📱 رقم الواتساب">
+  
+  <select id="branch">
+    <option value="علمي علوم">🔬 علمي علوم</option>
+    <option value="علمي رياضة">📐 علمي رياضة</option>
+    <option value="أدبي">📖 أدبي</option>
+  </select>
+  
+  <button class="green" onclick="registerStudent()">✅ تسجيل</button>
+</div>
+
+<!-- ====== صفحة المواد ====== -->
+<div id="subjectsPage" class="page">
+  <h3>📚 المواد الدراسية</h3>
+  
+  <div id="studentInfo" style="background:#f0f0f0;padding:10px;border-radius:10px;margin-bottom:15px;text-align:center;"></div>
+  
+  <div id="subjectsList"></div>
+  
+  <div class="btn-group">
+    <button class="gray" onclick="go('registerPage')">🔙 تسجيل طالب جديد</button>
+  </div>
+</div>
+
+<!-- ====== صفحة الأدمن ====== -->
+<div id="adminPage" class="page">
+  <h3>👑 لوحة التحكم</h3>
+  
+  <div class="btn-group">
+    <button class="red" onclick="clearAllData()">🗑️ حذف الكل</button>
+    <button class="gray" onclick="go('registerPage')">🔙 العودة</button>
+  </div>
+  
+  <div id="requestsList"></div>
+</div>
+
+</div>
+
+<script>
+
+const ADMIN_PASSWORD = "MNY#M502";
+
+// ====== التنقل بين الصفحات ======
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('show');
+  });
+  document.getElementById(page).classList.add('show');
+  
+  if (page === "adminPage") {
+    loadRequests();
+  }
+  
+  if (page === "subjectsPage") {
+    showStudentSubjects();
+  }
+  
+  updateStats();
+}
+
+// ====== تحديث الإحصائيات ======
+function updateStats() {
+  try {
+    const students = JSON.parse(localStorage.getItem("students") || "[]");
+    const requests = JSON.parse(localStorage.getItem("requests") || "[]");
+    const pending = requests.filter(r => r.status === "pending").length;
+    
+    document.getElementById("totalStudents").textContent = students.length;
+    document.getElementById("pendingRequests").textContent = pending;
+  } catch(e) {
+    console.log("Error updating stats:", e);
+  }
+}
+
+// ====== دخول الأدمن ======
+function openAdminLogin() {
+  let pass = prompt("🔑 أدخل كلمة المرور:");
+  
+  if (pass === ADMIN_PASSWORD) {
+    go("adminPage");
+  } else if (pass !== null) {
+    showNotification("❌ كلمة المرور خطأ", "error");
+  }
+}
+
+// ====== تسجيل طالب ======
+function registerStudent() {
+  // جلب البيانات
+  const nameInput = document.getElementById("name");
+  const phoneInput = document.getElementById("phone");
+  const branchSelect = document.getElementById("branch");
+  
+  const name = nameInput.value.trim();
+  const phone = phoneInput.value.trim();
+  const branch = branchSelect.value;
+  
+  // التحقق من البيانات
+  if (!name || !phone) {
+    showNotification("⚠️ الرجاء ملء جميع البيانات", "error");
+    return;
+  }
+  
+  if (!/^[0-9]+$/.test(phone)) {
+    showNotification("⚠️ رقم الواتساب يجب أن يكون أرقام فقط", "error");
+    return;
+  }
+  
+  // إنشاء كائن الطالب
+  const student = {
+    id: Date.now(),
+    name: name,
+    phone: phone,
+    branch: branch,
+    date: new Date().toLocaleString()
+  };
+  
+  // حفظ الطالب الحالي
+  localStorage.setItem("currentStudent", JSON.stringify(student));
+  
+  // حفظ في قائمة الطلاب
+  let students = [];
+  try {
+    students = JSON.parse(localStorage.getItem("students") || "[]");
+  } catch(e) {
+    students = [];
+  }
+  students.push(student);
+  localStorage.setItem("students", JSON.stringify(students));
+  
+  // مسح الحقول
+  nameInput.value = "";
+  phoneInput.value = "";
+  
+  // إشعار نجاح
+  showNotification(`✅ تم تسجيل ${name} بنجاح`, "success");
+  
+  // الانتقال لصفحة المواد
+  go('subjectsPage');
+}
+
+// ====== عرض مواد الطالب الحالي ======
+function showStudentSubjects() {
+  try {
+    const studentData = localStorage.getItem("currentStudent");
+    
+    if (!studentData) {
+      showNotification("⚠️ الرجاء تسجيل الدخول أولاً", "error");
+      go('registerPage');
+      return;
+    }
+    
+    const student = JSON.parse(studentData);
+    
+    // عرض معلومات الطالب
+    document.getElementById("studentInfo").innerHTML = `
+      👤 <strong>${student.name}</strong> | 
+      📱 ${student.phone} | 
+      📚 ${student.branch}
+    `;
+    
+    const subjectsMap = {
+      "علمي علوم": ["أحياء", "كيمياء", "فيزياء", "إنجليزي", "رياضة", "العربي"],
+      "علمي رياضة": ["رياضة بحتة", "رياضة تطبيقية", "فيزياء", "كيمياء", "إنجليزي", "العربي"],
+      "أدبي": ["تاريخ", "جغرافيا", "فلسفة", "علم نفس", "إنجليزي", "العربي"]
+    };
+    
+    const subjects = subjectsMap[student.branch] || subjectsMap["علمي علوم"];
+    
+    let html = "";
+    
+    // جلب الطلبات
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem("requests") || "[]");
+    } catch(e) {
+      requests = [];
+    }
+    
+    subjects.forEach(sub => {
+      const price = sub === "العربي" ? "مجاني" : "450 جنيه";
+      
+      const existingRequest = requests.find(r => 
+        r.studentName === student.name && r.subject === sub
+      );
+      
+      let statusHtml = "";
+      let buttonDisabled = "";
+      
+      if (existingRequest) {
+        if (existingRequest.status === "pending") {
+          statusHtml = `<span class="status-badge status-pending">⏳ قيد المراجعة</span>`;
+          buttonDisabled = "disabled style='opacity:0.5;cursor:not-allowed;'";
+        } else if (existingRequest.status === "accepted") {
+          statusHtml = `<span class="status-badge status-accepted">✅ مقبول</span>`;
+          buttonDisabled = "disabled style='opacity:0.5;cursor:not-allowed;'";
+        } else if (existingRequest.status === "rejected") {
+          statusHtml = `<span class="status-badge status-rejected">❌ مرفوض</span>`;
+          buttonDisabled = "";
+        }
+      }
+      
+      html += `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b>${sub}</b>
+            <span class="price">${price}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            ${statusHtml}
+            <button class="green" onclick="sendRequest('${sub}')" ${buttonDisabled}>
+              📩 اشتراك
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    
+    document.getElementById("subjectsList").innerHTML = html;
+    
+  } catch(e) {
+    console.log("Error showing subjects:", e);
+    showNotification("⚠️ حدث خطأ في عرض المواد", "error");
+  }
+}
+
+// ====== إرسال طلب ======
+function sendRequest(subject) {
+  try {
+    const studentData = localStorage.getItem("currentStudent");
+    
+    if (!studentData) {
+      showNotification("⚠️ الرجاء تسجيل الدخول أولاً", "error");
+      go('registerPage');
+      return;
+    }
+    
+    const student = JSON.parse(studentData);
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem("requests") || "[]");
+    } catch(e) {
+      requests = [];
+    }
+    
+    // منع التكرار
+    const exists = requests.some(r => 
+      r.studentName === student.name && 
+      r.subject === subject && 
+      (r.status === "pending" || r.status === "accepted")
+    );
+    
+    if (exists) {
+      showNotification("⚠️ لديك طلب سابق لهذه المادة", "error");
+      return;
+    }
+    
+    requests.push({
+      studentName: student.name,
+      studentPhone: student.phone,
+      subject: subject,
+      status: "pending",
+      time: new Date().toLocaleString()
+    });
+    
+    localStorage.setItem("requests", JSON.stringify(requests));
+    showNotification(`✅ تم إرسال طلب ${subject}`, "success");
+    
+    // تحديث عرض المواد
+    showStudentSubjects();
+    updateStats();
+    
+  } catch(e) {
+    console.log("Error sending request:", e);
+    showNotification("⚠️ حدث خطأ في إرسال الطلب", "error");
+  }
+}
+
+// ====== تحميل طلبات الأدمن ======
+function loadRequests() {
+  try {
+    const list = document.getElementById("requestsList");
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem("requests") || "[]");
+    } catch(e) {
+      requests = [];
+    }
+    
+    if (requests.length === 0) {
+      list.innerHTML = `
+        <div style="text-align:center;padding:40px;color:#999;">
+          🎉 لا يوجد طلبات حالياً
+        </div>
+      `;
+      return;
+    }
+    
+    const sortedRequests = [...requests].reverse();
+    
+    list.innerHTML = `<p style="color:#666;">📌 عدد الطلبات: ${requests.length}</p>`;
+    
+    sortedRequests.forEach((r, index) => {
+      const originalIndex = requests.length - 1 - index;
+      const statusClass = r.status === "pending" ? "status-pending" : 
+                         r.status === "accepted" ? "status-accepted" : "status-rejected";
+      const statusText = r.status === "pending" ? "⏳ معلق" : 
+                         r.status === "accepted" ? "✅ مقبول" : "❌ مرفوض";
+      
+      const buttons = r.status === "pending" ? `
+        <div class="btn-group" style="margin-top:10px;">
+          <button class="green" onclick="acceptRequest(${originalIndex})">✅ قبول</button>
+          <button class="red" onclick="rejectRequest(${originalIndex})">❌ رفض</button>
+        </div>
+      ` : `<span class="status-badge ${statusClass}">${statusText}</span>`;
+      
+      list.innerHTML += `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div>
+              <b>👤 ${r.studentName}</b><br>
+              <span style="color:#666;font-size:14px;">📱 ${r.studentPhone || 'غير متوفر'}</span><br>
+              <span style="color:#666;font-size:14px;">📚 ${r.subject}</span><br>
+              <span style="color:#999;font-size:12px;">🕐 ${r.time}</span>
+            </div>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
+          ${buttons}
+        </div>
+      `;
+    });
+    
+  } catch(e) {
+    console.log("Error loading requests:", e);
+  }
+}
+
+// ====== قبول الطلب ======
+function acceptRequest(index) {
+  try {
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem("requests") || "[]");
+    } catch(e) {
+      requests = [];
+    }
+    
+    if (requests[index]) {
+      requests[index].status = "accepted";
+      localStorage.setItem("requests", JSON.stringify(requests));
+      showNotification("✅ تم قبول الطلب", "success");
+      loadRequests();
+      updateStats();
+    }
+  } catch(e) {
+    console.log("Error accepting request:", e);
+  }
+}
+
+// ====== رفض الطلب ======
+function rejectRequest(index) {
+  if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
+    try {
+      let requests = [];
+      try {
+        requests = JSON.parse(localStorage.getItem("requests") || "[]");
+      } catch(e) {
+        requests = [];
+      }
+      
+      if (requests[index]) {
+        requests[index].status = "rejected";
+        localStorage.setItem("requests", JSON.stringify(requests));
+        showNotification("❌ تم رفض الطلب", "error");
+        loadRequests();
+        updateStats();
+      }
+    } catch(e) {
+      console.log("Error rejecting request:", e);
+    }
+  }
+}
+
+// ====== حذف جميع البيانات ======
+function clearAllData() {
+  if (confirm("⚠️ هل أنت متأكد من حذف جميع البيانات؟")) {
+    if (confirm("تأكيد نهائي: حذف كل شيء؟")) {
+      try {
+        localStorage.removeItem("students");
+        localStorage.removeItem("requests");
+        localStorage.removeItem("currentStudent");
+        showNotification("🗑️ تم حذف جميع البيانات", "error");
+        loadRequests();
+        updateStats();
+        go('registerPage');
+      } catch(e) {
+        console.log("Error clearing data:", e);
+      }
+    }
+  }
+}
+
+// ====== إشعارات ======
+function showNotification(message, type = "success") {
+  const colors = {
+    success: "#28a745",
+    error: "#dc3545",
+    warning: "#ffc107"
+  };
+  
+  // إزالة أي إشعار قديم
+  const oldNotification = document.querySelector('.notification');
+  if (oldNotification) {
+    oldNotification.remove();
+  }
+  
+  const notification = document.createElement("div");
+  notification.className = "notification";
+  notification.textContent = message;
+  notification.style.background = colors[type] || "#333";
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 3000);
+}
+
+// ====== تشغيل عند التحميل ======
+window.onload = function() {
+  updateStats();
+  // إذا كان هناك طالب مسجل، نعرض صفحة المواد
+  const studentData = localStorage.getItem("currentStudent");
+  if (studentData) {
+    try {
+      const student = JSON.parse(studentData);
+      if (student && student.name) {
+        go('subjectsPage');
+      }
+    } catch(e) {
+      // إذا كان البيانات تالفة، نذهب للتسجيل
+      go('registerPage');
+    }
+  }
+};
+
+</script>
+
+</body>
+</html>
