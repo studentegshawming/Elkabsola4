@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>الكبسولة التعليمية</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tahoma', sans-serif; background: #f4f7fa; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 0 20px rgba(0,0,0,0.08); }
+        h1, h2 { color: #1e2b3a; margin-bottom: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #b02a37; }
+        .btn-whatsapp { background: #25d366; color: white; }
+        .btn-whatsapp:hover { background: #1da851; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .card { background: #f8f9fa; padding: 18px; border-radius: 12px; margin: 12px 0; border-right: 5px solid #007bff; }
+        .material-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 15px; margin: 20px 0; }
+        .material-item { background: #e9ecef; padding: 15px; border-radius: 12px; text-align: center; }
+        .material-item h3 { margin-bottom: 8px; }
+        .exam-image { max-width: 100%; border-radius: 8px; margin: 8px 0; border: 1px solid #ddd; }
+        .hidden { display: none; }
+        .admin-panel { background: #fff3cd; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .nav { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+        .nav button { flex: 1; min-width: 100px; }
+        .request-item { background: white; padding: 12px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .whatsapp-float { position: fixed; bottom: 25px; left: 25px; background: #25d366; color: white; padding: 16px 22px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 999; }
+        .whatsapp-float:hover { background: #1da851; }
+        @media (max-width:600px){ .material-grid{grid-template-columns:1fr 1fr;} }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- واجهة تسجيل الدخول -->
+    <div id="authPage">
+        <h1>📚 الكبسولة التعليمية</h1>
+        <div class="card">
+            <h3>تسجيل الدخول / إنشاء حساب</h3>
+            <input type="text" id="phoneInput" placeholder="رقم الهاتف (مثال: 01234567890)" />
+            <input type="password" id="passInput" placeholder="كلمة المرور (أقل شيء 4 أحرف)" />
+            <button class="btn btn-primary" onclick="signIn()">تسجيل الدخول</button>
+            <button class="btn btn-success" onclick="signUp()">إنشاء حساب جديد</button>
+            <p id="authMsg" style="color:red; margin-top:10px;"></p>
+        </div>
+    </div>
+
+    <!-- الصفحة الرئيسية (بعد تسجيل الدخول) -->
+    <div id="mainPage" class="hidden">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+            <h2>👋 مرحباً، <span id="userPhoneDisplay"></span></h2>
+            <div>
+                <button class="btn btn-danger" onclick="logout()">تسجيل خروج</button>
+                <button class="btn btn-primary" onclick="showAdmin()" id="adminBtn" class="hidden">لوحة التحكم</button>
+            </div>
+        </div>
+        <hr style="margin:15px 0;">
+
+        <h3>📖 المواد الدراسية</h3>
+        <div class="material-grid" id="materialGrid"></div>
+
+        <!-- عرض الامتحانات للمادة المختارة -->
+        <div id="examSection" class="hidden">
+            <hr style="margin:20px 0;">
+            <h3 id="examTitle"></h3>
+            <div id="examImages"></div>
+            <button class="btn btn-primary" onclick="closeExam()">🔙 العودة للمواد</button>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم الأدمن -->
+    <div id="adminPanel" class="hidden admin-panel">
+        <h2>⚙️ لوحة التحكم</h2>
+        <button class="btn btn-danger" onclick="closeAdmin()">إغلاق اللوحة</button>
+        <hr>
+
+        <h4>📩 طلبات الاشتراك</h4>
+        <div id="requestsList"></div>
+
+        <h4>📤 رفع امتحان جديد (صور)</h4>
+        <select id="subjectSelect">
+            <option value="اللغة العربية">اللغة العربية</option>
+            <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+            <option value="الكيمياء">الكيمياء</option>
+            <option value="الأحياء">الأحياء</option>
+            <option value="الرياضيات">الرياضيات</option>
+            <option value="الفيزياء">الفيزياء</option>
+        </select>
+        <input type="text" id="imageUrlInput" placeholder="رابط الصورة (مباشر)" />
+        <button class="btn btn-success" onclick="addExamImage()">➕ إضافة صورة امتحان</button>
+
+        <h4 style="margin-top:20px;">🗑️ إدارة الصور</h4>
+        <div id="adminImagesList"></div>
+    </div>
+</div>
+
+<!-- زر واتساب ثابت -->
+<a href="https://wa.me/201271825595" target="_blank" class="whatsapp-float">💬 واتساب الدعم</a>
+
+<script>
+    // ------------------------------------------------
+    // البيانات (محاكاة قاعدة بيانات)
+    // ------------------------------------------------
+    let users = JSON.parse(localStorage.getItem('eduUsers')) || {};
+    // هيكل المستخدم: { phone: { password, subscribed: { 'اللغة العربية': true, ... }, requests: ['اللغة العربية'] } }
+    let exams = JSON.parse(localStorage.getItem('eduExams')) || {};
+    // هيكل الامتحانات: { 'اللغة العربية': ['image1.jpg','image2.jpg'], ... }
+
+    // المواد الثابتة
+    const subjects = ['اللغة العربية', 'اللغة الإنجليزية', 'الكيمياء', 'الأحياء', 'الرياضيات', 'الفيزياء'];
+    const SUBSCRIPTION_PRICE = 1200;
+    const ADMIN_PHONE = '01271825595'; // رقم الأدمن (للعرض)
+
+    let currentUser = null;      // رقم هاتف المستخدم الحالي
+    let currentSubject = null;   // المادة المعروضة حالياً
+
+    // ------------------------------------------------
+    // دوال المصادقة
+    // ------------------------------------------------
+    function signUp() {
+        const phone = document.getElementById('phoneInput').value.trim();
+        const pass = document.getElementById('passInput').value.trim();
+        if (!phone || !pass) { showAuthMsg('يرجى ملء جميع الحقول'); return; }
+        if (phone.length < 11) { showAuthMsg('رقم الهاتف يجب أن يكون 11 رقم على الأقل'); return; }
+        if (pass.length < 4) { showAuthMsg('كلمة المرور 4 أحرف على الأقل'); return; }
+        if (users[phone]) { showAuthMsg('هذا الرقم مسجل مسبقاً'); return; }
+        users[phone] = { password: pass, subscribed: {}, requests: [] };
+        localStorage.setItem('eduUsers', JSON.stringify(users));
+        showAuthMsg('✅ تم إنشاء الحساب بنجاح، سجل الدخول الآن', 'green');
+    }
+
+    function signIn() {
+        const phone = document.getElementById('phoneInput').value.trim();
+        const pass = document.getElementById('passInput').value.trim();
+        if (!phone || !pass) { showAuthMsg('يرجى ملء جميع الحقول'); return; }
+        if (!users[phone] || users[phone].password !== pass) {
+            showAuthMsg('رقم الهاتف أو كلمة المرور غير صحيحة');
+            return;
+        }
+        currentUser = phone;
+        localStorage.setItem('eduCurrentUser', currentUser);
+        document.getElementById('authPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        document.getElementById('userPhoneDisplay').textContent = phone;
+        // إظهار زر الأدمن إذا كان هذا رقم الأدمن
+        if (phone === ADMIN_PHONE) {
+            document.getElementById('adminBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('adminBtn').classList.add('hidden');
+        }
+        renderMaterials();
+        renderAdmin(); // لتحديث لوحة التحكم
+        showAuthMsg('');
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('eduCurrentUser');
+        document.getElementById('mainPage').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('authPage').classList.remove('hidden');
+        document.getElementById('examSection').classList.add('hidden');
+        showAuthMsg('');
+    }
+
+    function showAuthMsg(msg, color = 'red') {
+        const el = document.getElementById('authMsg');
+        el.textContent = msg;
+        el.style.color = color;
+    }
+
+    // استعادة الجلسة
+    (function() {
+        const saved = localStorage.getItem('eduCurrentUser');
+        if (saved && users[saved]) {
+            currentUser = saved;
+            document.getElementById('authPage').classList.add('hidden');
+            document.getElementById('mainPage').classList.remove('hidden');
+            document.getElementById('userPhoneDisplay').textContent = saved;
+            if (saved === ADMIN_PHONE) document.getElementById('adminBtn').classList.remove('hidden');
+            renderMaterials();
+            renderAdmin();
+        }
+    })();
+
+    // ------------------------------------------------
+    // عرض المواد
+    // ------------------------------------------------
+    function renderMaterials() {
+        const grid = document.getElementById('materialGrid');
+        grid.innerHTML = '';
+        subjects.forEach(sub => {
+            const isSubscribed = currentUser && users[currentUser]?.subscribed?.[sub] === true;
+            const div = document.createElement('div');
+            div.className = 'material-item';
+            div.innerHTML = `
+                <h3>${sub}</h3>
+                <p>سعر الاشتراك: ${SUBSCRIPTION_PRICE} ج.م</p>
+                ${isSubscribed ? '<span style="color:green;">✅ مشترك</span>' : ''}
+                <br><br>
+                ${isSubscribed ? 
+                    `<button class="btn btn-primary" onclick="openSubject('${sub}')">📖 عرض الامتحانات</button>` :
+                    `<button class="btn btn-whatsapp" onclick="subscribe('${sub}')">📲 اشترك الآن (واتساب)</button>`
+                }
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    // ------------------------------------------------
+    // الاشتراك (تحويل لواتساب)
+    // ------------------------------------------------
+    function subscribe(subject) {
+        // تسجيل طلب اشتراك في حساب المستخدم
+        if (currentUser && users[currentUser]) {
+            if (!users[currentUser].requests.includes(subject)) {
+                users[currentUser].requests.push(subject);
+                localStorage.setItem('eduUsers', JSON.stringify(users));
+            }
+        }
+        // تحويل إلى واتساب مع رسالة مخصصة
+        const msg = `أريد الاشتراك في مادة ${subject} - رقم هاتفي: ${currentUser || 'غير مسجل'}`;
+        const url = `https://wa.me/201271825595?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+        // تحديث واجهة الأدمن فوراً
+        renderAdmin();
+    }
+
+    // ------------------------------------------------
+    // فتح مادة (عرض الصور)
+    // ------------------------------------------------
+    function openSubject(subject) {
+        if (!currentUser || !users[currentUser]?.subscribed?.[subject]) {
+            alert('⚠️ أنت غير مشترك في هذه المادة. اضغط على "اشترك الآن"');
+            return;
+        }
+        currentSubject = subject;
+        document.getElementById('examTitle').textContent = `📄 امتحانات ${subject}`;
+        const imagesDiv = document.getElementById('examImages');
+        imagesDiv.innerHTML = '';
+        const imgs = exams[subject] || [];
+        if (imgs.length === 0) {
+            imagesDiv.innerHTML = '<p>لا توجد امتحانات مضافة حالياً.</p>';
+        } else {
+            imgs.forEach(img => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img;
+                imgEl.className = 'exam-image';
+                imgEl.style.maxWidth = '100%';
+                imgEl.style.margin = '8px 0';
+                imagesDiv.appendChild(imgEl);
+            });
+        }
+        document.getElementById('examSection').classList.remove('hidden');
+        // إخفاء المواد لتوفير مساحة
+        document.getElementById('materialGrid').style.display = 'none';
+    }
+
+    function closeExam() {
+        document.getElementById('examSection').classList.add('hidden');
+        document.getElementById('materialGrid').style.display = 'grid';
+        currentSubject = null;
+    }
+
+    // ------------------------------------------------
+    // لوحة تحكم الأدمن
+    // ------------------------------------------------
+    function showAdmin() {
+        if (currentUser !== ADMIN_PHONE) { alert('هذه الصفحة للأدمن فقط'); return; }
+        document.getElementById('adminPanel').classList.remove('hidden');
+        renderAdmin();
+    }
+
+    function closeAdmin() {
+        document.getElementById('adminPanel').classList.add('hidden');
+    }
+
+    function renderAdmin() {
+        if (!currentUser || currentUser !== ADMIN_PHONE) return;
+        // عرض طلبات الاشتراك
+        const list = document.getElementById('requestsList');
+        list.innerHTML = '';
+        let hasRequests = false;
+        for (let phone in users) {
+            const user = users[phone];
+            if (user.requests && user.requests.length > 0) {
+                hasRequests = true;
+                user.requests.forEach(sub => {
+                    const div = document.createElement('div');
+                    div.className = 'request-item';
+                    const alreadySub = user.subscribed?.[sub] === true;
+                    div.innerHTML = `
+                        <span><strong>${phone}</strong> يطلب ${sub} ${alreadySub ? '(✅ مشترك فعلاً)' : ''}</span>
+                        <span>
+                            ${!alreadySub ? `<button class="btn btn-success" onclick="approveRequest('${phone}','${sub}')">✅ قبول</button>` : ''}
+                            <button class="btn btn-danger" onclick="rejectRequest('${phone}','${sub}')">❌ رفض</button>
+                        </span>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        }
+        if (!hasRequests) list.innerHTML = '<p>لا توجد طلبات حالياً</p>';
+
+        // عرض صور الامتحانات في لوحة الأدمن
+        const adminImages = document.getElementById('adminImagesList');
+        adminImages.innerHTML = '';
+        for (let sub in exams) {
+            const imgs = exams[sub];
+            imgs.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '10px';
+                div.style.margin = '5px 0';
+                div.innerHTML = `
+                    <span>${sub} - صورة ${idx+1}</span>
+                    <img src="${img}" style="width:80px; border-radius:6px;" />
+                    <button class="btn btn-danger" onclick="removeExamImage('${sub}',${idx})">🗑️ حذف</button>
+                `;
+                adminImages.appendChild(div);
+            });
+        }
+        if (Object.keys(exams).length === 0) adminImages.innerHTML = '<p>لا توجد صور مضافة</p>';
+    }
+
+    // قبول طلب اشتراك
+    function approveRequest(phone, subject) {
+        if (!users[phone]) return;
+        if (!users[phone].subscribed) users[phone].subscribed = {};
+        users[phone].subscribed[subject] = true;
+        // إزالة الطلب من قائمة الطلبات
+        users[phone].requests = users[phone].requests.filter(s => s !== subject);
+        localStorage.setItem('eduUsers', JSON.stringify(users));
+        renderAdmin();
+        renderMaterials();
+        alert(`✅ تم تفعيل اشتراك ${phone} في ${subject}`);
+    }
+
+    // رفض طلب اشتراك
+    function rejectRequest(phone, subject) {
+        if (!users[phone]) return;
+        users[phone].requests = users[phone].requests.filter(s => s !== subject);
+        localStorage.setItem('eduUsers', JSON.stringify(users));
+        renderAdmin();
+        alert(`❌ تم رفض طلب ${phone} في ${subject}`);
+    }
+
+    // إضافة صورة امتحان (من الأدمن)
+    function addExamImage() {
+        const subject = document.getElementById('subjectSelect').value;
+        const url = document.getElementById('imageUrlInput').value.trim();
+        if (!url) { alert('يرجى إدخال رابط الصورة'); return; }
+        if (!exams[subject]) exams[subject] = [];
+        exams[subject].push(url);
+        localStorage.setItem('eduExams', JSON.stringify(exams));
+        document.getElementById('imageUrlInput').value = '';
+        renderAdmin();
+        alert('✅ تم إضافة الصورة بنجاح');
+    }
+
+    // حذف صورة امتحان
+    function removeExamImage(subject, index) {
+        if (!exams[subject]) return;
+        exams[subject].splice(index, 1);
+        if (exams[subject].length === 0) delete exams[subject];
+        localStorage.setItem('eduExams', JSON.stringify(exams));
+        renderAdmin();
+        // إعادة عرض المادة إن كانت مفتوحة
+        if (currentSubject === subject) openSubject(subject);
+    }
+
+    // ------------------------------------------------
+    // دوال مساعدة
+    // ------------------------------------------------
+    // جعل دوال الـ Admin متاحة في الـ scope العام
+    window.signIn = signIn;
+    window.signUp = signUp;
+    window.logout = logout;
+    window.showAdmin = showAdmin;
+    window.closeAdmin = closeAdmin;
+    window.subscribe = subscribe;
+    window.openSubject = openSubject;
+    window.closeExam = closeExam;
+    window.approveRequest = approveRequest;
+    window.rejectRequest = rejectRequest;
+    window.addExamImage = addExamImage;
+    window.removeExamImage = removeExamImage;
+
+    console.log('🚀 الكبسولة التعليمية جاهزة!');
+    console.log('👤 الأدمن: 01271825595 (أي كلمة مرور)');
+</script>
+
+</body>
+              </html>
